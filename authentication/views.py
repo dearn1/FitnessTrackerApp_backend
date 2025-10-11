@@ -6,13 +6,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
 from .serializers import (
     UserLoginSerializer,
-    UserProfileSerializer
+    UserProfileSerializer,
+    UserRegistrationSerializer
 )
 
 User = get_user_model()
-
-
-
 
 class UserLoginView(APIView):
     permission_classes = (AllowAny,)
@@ -63,3 +61,18 @@ class UserLogoutView(APIView):
             return Response({
                 'error': 'Invalid token'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+class UserRegistrationView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = UserRegistrationSerializer
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        return Response({
+            "user": UserProfileSerializer(user).data,
+            "message": "User registered successfully. Please verify your email."
+        }, status=status.HTTP_201_CREATED)
