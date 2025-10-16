@@ -1,0 +1,51 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.10  # More CircleCI-friendly image
+    steps:
+      - checkout  
+      - run:
+          name: Install dependencies
+          command: |
+            python -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - run:
+          name: Run tests
+          command: |
+            . venv/bin/activate
+            python manage.py test
+ 
+  build:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - run:
+          name: Build / Run
+          command: |
+            . venv/bin/activate
+            python manage.py check  # Replace with `runserver` only if you are running locally
+ 
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - test
+      - build:
+          requires:
+            - test
