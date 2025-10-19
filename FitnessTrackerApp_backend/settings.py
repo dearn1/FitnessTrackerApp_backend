@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'authentication',
     'workouts',
     'meals',
+    'steps',
 ]
 
 MIDDLEWARE = [
