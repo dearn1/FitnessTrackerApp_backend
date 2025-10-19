@@ -20,7 +20,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('authentication.urls')),
-    path('api/', include('workouts.urls')),
-    path('api/', include('meals.urls')),
-    path('api/', include('steps.urls')),
+    path('api/workouts/', include('workouts.urls')),
+    path('api/meals/', include('meals.urls')),
+    path('api/steps/', include('steps.urls')),  # This is the correct path for steps
 ]

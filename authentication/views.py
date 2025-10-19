@@ -55,8 +55,8 @@ class UserLogoutView(APIView):
             token.blacklist()
             
             return Response({
-                'message': 'Logout successful'
-            }, status=status.HTTP_200_OK)
+                'message': 'Logout successful'},
+                status=status.HTTP_200_OK)
         except Exception as e:
             return Response({
                 'error': 'Invalid token'
@@ -66,13 +66,28 @@ class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = UserRegistrationSerializer
-    
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        return Response({
-            "user": UserProfileSerializer(user).data,
-            "message": "User registered successfully. Please verify your email."
-        }, status=status.HTTP_201_CREATED)
+        refresh = RefreshToken.for_user(user)
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserProfileSerializer(user).data
+        }
+        
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    """
+    View to retrieve and update user profile information
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserProfileSerializer
+
+    def get_object(self):
+        return self.request.user
