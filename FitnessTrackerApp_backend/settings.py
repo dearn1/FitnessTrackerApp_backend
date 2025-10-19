@@ -52,8 +52,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'authentication',
-    'workouts',
     'meals',
+    'workouts',
     'steps',
 ]
 
@@ -92,6 +92,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',
     'http://localhost:3001',
     'http://127.0.0.1:3001',
+    'http://localhost:3002',
+    'http://127.0.0.1:3002',
     'https://fitness-tracker-app-theta.vercel.app',
 ]
 
