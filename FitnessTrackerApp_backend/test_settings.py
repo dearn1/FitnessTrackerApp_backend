@@ -45,6 +45,7 @@ MIGRATION_MODULES = {
     'meals': None,
     'workouts': None,
     'authentication': None,
+    'steps': None,
 }
 
 # Disable migrations completely
@@ -72,6 +73,7 @@ INSTALLED_APPS = [
     'meals',
     'workouts',
     'authentication',
+    'steps',
 ]
 
 # Add the authentication backend for the custom user model
