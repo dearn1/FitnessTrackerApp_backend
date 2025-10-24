@@ -1,9 +1,18 @@
-from django.test import SimpleTestCase
-from unittest.mock import patch, MagicMock, PropertyMock
-from rest_framework.test import APIRequestFactory, force_authenticate
+import json
+from datetime import date, datetime, time
+from unittest.mock import patch, MagicMock
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase, SimpleTestCase, TransactionTestCase
+from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
-from datetime import date, datetime
-from .views import WorkoutViewSet
+from rest_framework.test import APIClient, APITestCase, APIRequestFactory, force_authenticate
+
+from workouts.models import Workout
+from workouts.views import WorkoutViewSet
+
+User = get_user_model()
 
 
 class MinimalUser:
@@ -60,7 +69,7 @@ class MinimalWorkout:
         pass
 
 
-class WorkoutViewSetNoDBTests(SimpleTestCase):
+class WorkoutViewSetNoDBTests(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
         self.user = MinimalUser()
@@ -205,6 +214,127 @@ class WorkoutViewSetNoDBTests(SimpleTestCase):
         self.assertEqual(mock_workout.duration, 45)
 
 
-from django.test import TestCase
 
-# Create your tests here.
+
+class WorkoutStatusUpdateTests(TestCase):
+    """Test cases for updating workout status with mocks"""
+    
+    # Use the test database for these tests
+    databases = {'default'}
+
+    @classmethod
+    def setUpTestData(cls):
+        # Set up data for the whole TestCase
+        cls.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        
+    def setUp(self):
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+        
+        # Create test workout using the model directly
+        self.workout = Workout.objects.create(
+            user=self.user,
+            workout_type='running',
+            title='Morning Run',
+            description='Easy run',
+            duration=30,
+            calories_burned=250.0,
+            distance=5.0,
+            intensity='medium',
+            status='planned',
+            workout_date=date.today(),
+            date=date.today(),  # Add the date field that's required by the clean method
+            start_time=time(8, 0),
+            end_time=time(8, 30),
+            notes='Test workout'
+        )
+        
+        # Set up URL using reverse
+        self.workout_url = reverse('workout-detail', kwargs={'pk': self.workout.id})
+    
+    def test_update_workout_status_to_in_progress(self):
+        """Test updating workout status to 'in_progress'"""
+        # Make request
+        response = self.client.patch(
+            self.workout_url,
+            data=json.dumps({'status': 'in_progress'}),
+            content_type='application/json'
+        )
+        
+        # Debug output
+        print(f"Response status: {response.status_code}")
+        print(f"Response data: {response.data}")
+        
+        # Assertions
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.workout.refresh_from_db()
+        self.assertEqual(self.workout.status, 'in_progress')
+        self.assertIsNotNone(self.workout.started_at)
+    
+    def test_update_workout_status_to_completed(self):
+        """Test updating workout status to 'completed'"""
+        # First update to in_progress
+        response = self.client.patch(
+            self.workout_url,
+            data=json.dumps({'status': 'in_progress'}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.workout.refresh_from_db()
+        self.assertEqual(self.workout.status, 'in_progress')
+        self.assertIsNotNone(self.workout.started_at)
+        
+        # Then complete it
+        response = self.client.patch(
+            self.workout_url,
+            data=json.dumps({'status': 'completed'}),
+            content_type='application/json'
+        )
+        
+        # Debug output
+        print(f"Response status: {response.status_code}")
+        print(f"Response data: {response.data}")
+        
+        # Assertions
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.workout.refresh_from_db()
+        self.assertEqual(self.workout.status, 'completed')
+        self.assertIsNotNone(self.workout.completed_at)
+    
+    def test_invalid_status_transition(self):
+        """Test invalid status transition (skipping from planned to completed)"""
+        # Try to skip to completed
+        response = self.client.patch(
+            self.workout_url,
+            data=json.dumps({'status': 'completed'}),
+            content_type='application/json'
+        )
+        
+        # Debug output
+        print(f"Response status: {response.status_code}")
+        print(f"Response data: {response.data}")
+        
+        # Assertions
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('status', response.data)
+    
+    def test_update_nonexistent_workout(self):
+        """Test updating status of a non-existent workout"""
+        # Try to update non-existent workout
+        non_existent_url = reverse('workout-detail', kwargs={'pk': 9999})
+        response = self.client.patch(
+            non_existent_url,
+            data=json.dumps({'status': 'in_progress'}),
+            content_type='application/json'
+        )
+        
+        # Debug output
+        print(f"Response status: {response.status_code}")
+        print(f"Response data: {response.data}")
+        
+        # Assertions
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

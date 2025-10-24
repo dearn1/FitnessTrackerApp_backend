@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 class Meal(models.Model):
@@ -235,6 +237,76 @@ class FoodItem(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.serving_size})"
+
+        # Date and Time fields
+        date = models.DateField()
+        time = models.TimeField(null=True, blank=True, help_text="Time when meal was consumed")
+
+        calories = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+        protein_grams = models.DecimalField(
+            max_digits=6,
+            decimal_places=2,
+            null=True,
+            blank=True,
+            validators=[MinValueValidator(0)]
+        )
+        carbs_grams = models.DecimalField(
+            max_digits=6,
+            decimal_places=2,
+            null=True,
+            blank=True,
+            validators=[MinValueValidator(0)]
+        )
+        fats_grams = models.DecimalField(
+            max_digits=6,
+            decimal_places=2,
+            null=True,
+            blank=True,
+            validators=[MinValueValidator(0)]
+        )
+        notes = models.TextField(blank=True)
+        created_at = models.DateTimeField(auto_now_add=True)
+        updated_at = models.DateTimeField(auto_now=True)
+
+        class Meta:
+            ordering = ['-date', '-time']
+            indexes = [
+                models.Index(fields=['user', 'date']),
+                models.Index(fields=['user', 'meal_type']),
+            ]
+
+        def __str__(self):
+            time_str = f" at {self.time.strftime('%H:%M')}" if self.time else ""
+            return f"{self.user.username} - {self.name} ({self.meal_type}) on {self.date}{time_str}"
+
+        @property
+        def datetime_display(self):
+            """Return formatted date and time string"""
+            if self.time:
+                return f"{self.date.strftime('%Y-%m-%d')} {self.time.strftime('%H:%M')}"
+            return self.date.strftime('%Y-%m-%d')
+
+        @property
+        def total_macros(self):
+            """Calculate total macronutrients in grams"""
+            protein = float(self.protein_grams or 0)
+            carbs = float(self.carbs_grams or 0)
+            fats = float(self.fats_grams or 0)
+            return protein + carbs + fats
+
+        @property
+        def suggested_time(self):
+            """Suggest typical time based on meal type if time not set"""
+            if self.time:
+                return self.time
+
+            time_suggestions = {
+                'breakfast': '08:00',
+                'lunch': '12:00',
+                'dinner': '18:00',
+                'snack': '15:00',
+            }
+            return time_suggestions.get(self.meal_type, '12:00')
 
 
 from django.db import models

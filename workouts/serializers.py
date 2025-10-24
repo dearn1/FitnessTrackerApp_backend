@@ -79,6 +79,28 @@ class WorkoutUpdateSerializer(serializers.ModelSerializer):
             'notes', 'workout_date', 'started_at', 'completed_at'
         ]
 
+    def validate(self, data):
+        """Validate status transitions"""
+        instance = self.instance
+        new_status = data.get('status')
+        
+        if new_status and instance:
+            current_status = instance.status
+            
+            # Prevent invalid status transitions
+            if current_status == 'planned' and new_status == 'completed':
+                raise serializers.ValidationError({
+                    'status': 'Cannot mark a planned workout as completed. Please start the workout first.'
+                })
+                
+            # If marking as completed, ensure it was started
+            if new_status == 'completed' and not instance.started_at:
+                raise serializers.ValidationError({
+                    'status': 'Cannot complete a workout that has not been started.'
+                })
+                
+        return data
+
     def update(self, instance, validated_data):
         """Handle status changes and timestamps"""
         new_status = validated_data.get('status', instance.status)
