@@ -339,3 +339,76 @@ class WorkoutStatusUpdateTests(TestCase):
         
         # Assertions
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class WorkoutDeletionTests(APITestCase):
+    """Test cases for deleting workout entries"""
+    
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.other_user = User.objects.create_user(
+            username='otheruser',
+            email='other@example.com',
+            password='testpass123'
+        )
+        self.client.force_authenticate(user=self.user)
+        
+        # Create test workouts
+        self.workout = Workout.objects.create(
+            user=self.user,
+            workout_type='running',
+            title='Morning Run',
+            duration=30,
+            calories_burned=250,
+            status='completed',
+            workout_date=timezone.now().date(),
+            date=timezone.now().date()
+        )
+        self.other_user_workout = Workout.objects.create(
+            user=self.other_user,
+            workout_type='cycling',
+            title='Evening Ride',
+            duration=45,
+            calories_burned=350,
+            status='completed',
+            workout_date=timezone.now().date(),
+            date=timezone.now().date()
+        )
+    
+    def test_delete_own_workout(self):
+        """Test that a user can delete their own workout"""
+        url = reverse('workout-detail', args=[self.workout.id])
+        response = self.client.delete(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Workout.objects.filter(id=self.workout.id).exists())
+    
+    def test_delete_nonexistent_workout(self):
+        """Test deleting a workout that doesn't exist"""
+        non_existent_id = 9999
+        url = reverse('workout-detail', args=[non_existent_id])
+        response = self.client.delete(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    
+    def test_cannot_delete_other_users_workout(self):
+        """Test that a user cannot delete another user's workout"""
+        url = reverse('workout-detail', args=[self.other_user_workout.id])
+        response = self.client.delete(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(Workout.objects.filter(id=self.other_user_workout.id).exists())
+    
+    def test_delete_workout_unauthenticated(self):
+        """Test that unauthenticated users cannot delete workouts"""
+        self.client.force_authenticate(user=None)
+        url = reverse('workout-detail', args=[self.workout.id])
+        response = self.client.delete(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertTrue(Workout.objects.filter(id=self.workout.id).exists())
