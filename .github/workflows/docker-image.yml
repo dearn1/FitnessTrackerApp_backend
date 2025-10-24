@@ -17,6 +17,13 @@ jobs:
       - name: Install package
         run: pip install -r requirements.txt
       - name: Test the code
+        env:
+          DB_HOST: 'ep-sweet-poetry-adtsz9tl-pooler.c-2.us-east-1.aws.neon.tech'
+          DB_USER: 'neondb_owner'
+          DB_PASSWORD: 'npg_lsXZRT5hPpG8'
+          DB_NAME: 'neondb'
+          DB_PORT: '5432'
+          SECRET_KEY: 'django-insecure-^l482n+=kenr%!cpvqsfzyv_0igm(w*&$oq%i+%@oxwy2jh_j('
         run: python manage.py test
 
   build:
