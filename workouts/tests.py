@@ -15,6 +15,7 @@ from workouts.views import WorkoutViewSet
 User = get_user_model()
 
 
+
 class MinimalUser:
     """Minimal in-memory user for testing"""
 
