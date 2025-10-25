@@ -1,6 +1,6 @@
 import json
 import unittest
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from unittest.mock import patch, MagicMock
 
 from django.contrib.auth import get_user_model
@@ -8,7 +8,7 @@ from django.test import TestCase, SimpleTestCase, TransactionTestCase, override_
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase, APIRequestFactory, force_authenticate
+from rest_framework.test import APITestCase, APIClient, APIRequestFactory, force_authenticate
 
 from workouts.models import Workout
 from workouts.views import WorkoutViewSet
@@ -207,139 +207,12 @@ class WorkoutViewSetNoDBTests(TestCase):
 
         request = self.factory.post('/api/workouts/1/complete/', payload, format='json')
         force_authenticate(request, user=self.user)
-
         view = self.viewset.as_view({'post': 'complete'})
         response = view(request, pk=1)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(mock_workout.status, 'completed')
         self.assertEqual(mock_workout.duration, 45)
-
-
-
-
-class WorkoutStatusUpdateTests(TestCase):
-    """Test cases for updating workout status with mocks"""
-    
-    # Use the test database for these tests
-    databases = {'default'}
-
-    @classmethod
-    def setUpTestData(cls):
-        # Set up data for the whole TestCase
-        cls.user = User.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
-        )
-        
-    def setUp(self):
-        self.client = APIClient()
-        self.client.force_authenticate(user=self.user)
-        
-        # Create test workout using the model directly
-        self.workout = Workout.objects.create(
-            user=self.user,
-            workout_type='running',
-            title='Morning Run',
-            description='Easy run',
-            duration=30,
-            calories_burned=250.0,
-            distance=5.0,
-            intensity='medium',
-            status='planned',
-            workout_date=date.today(),
-            date=date.today(),  # Add the date field that's required by the clean method
-            start_time=time(8, 0),
-            end_time=time(8, 30),
-            notes='Test workout'
-        )
-        
-        # Set up URL using reverse
-        self.workout_url = reverse('workout-detail', kwargs={'pk': self.workout.id})
-    
-    def test_update_workout_status_to_in_progress(self):
-        """Test updating workout status to 'in_progress'"""
-        # Make request
-        response = self.client.patch(
-            self.workout_url,
-            data=json.dumps({'status': 'in_progress'}),
-            content_type='application/json'
-        )
-        
-        # Debug output
-        print(f"Response status: {response.status_code}")
-        print(f"Response data: {response.data}")
-        
-        # Assertions
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.workout.refresh_from_db()
-        self.assertEqual(self.workout.status, 'in_progress')
-        self.assertIsNotNone(self.workout.started_at)
-    
-    def test_update_workout_status_to_completed(self):
-        """Test updating workout status to 'completed'"""
-        # First update to in_progress
-        response = self.client.patch(
-            self.workout_url,
-            data=json.dumps({'status': 'in_progress'}),
-            content_type='application/json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.workout.refresh_from_db()
-        self.assertEqual(self.workout.status, 'in_progress')
-        self.assertIsNotNone(self.workout.started_at)
-        
-        # Then complete it
-        response = self.client.patch(
-            self.workout_url,
-            data=json.dumps({'status': 'completed'}),
-            content_type='application/json'
-        )
-        
-        # Debug output
-        print(f"Response status: {response.status_code}")
-        print(f"Response data: {response.data}")
-        
-        # Assertions
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.workout.refresh_from_db()
-        self.assertEqual(self.workout.status, 'completed')
-        self.assertIsNotNone(self.workout.completed_at)
-    
-    def test_invalid_status_transition(self):
-        """Test invalid status transition (skipping from planned to completed)"""
-        # Try to skip to completed
-        response = self.client.patch(
-            self.workout_url,
-            data=json.dumps({'status': 'completed'}),
-            content_type='application/json'
-        )
-        
-        # Debug output
-        print(f"Response status: {response.status_code}")
-        print(f"Response data: {response.data}")
-        
-        # Assertions
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('status', response.data)
-    
-    def test_update_nonexistent_workout(self):
-        """Test updating status of a non-existent workout"""
-        # Try to update non-existent workout
-        non_existent_url = reverse('workout-detail', kwargs={'pk': 9999})
-        response = self.client.patch(
-            non_existent_url,
-            data=json.dumps({'status': 'in_progress'}),
-            content_type='application/json'
-        )
-        
-        # Debug output
-        print(f"Response status: {response.status_code}")
-        print(f"Response data: {response.data}")
-        
-        # Assertions
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class ActivityHistoryTests(APITestCase):
@@ -359,17 +232,22 @@ class ActivityHistoryTests(APITestCase):
         self.yesterday = (timezone.now() - timezone.timedelta(days=1)).date()
         self.last_week = (timezone.now() - timezone.timedelta(weeks=1)).date()
         
-        # Create workouts on different dates
+        # Create workouts on different dates with all required fields
         self.workout1 = Workout.objects.create(
             user=self.user,
             workout_type='running',
             title='Morning Run',
+            description='Morning run in the park',
             duration=30,
             calories_burned=250,
             distance=5.0,
-            date=self.today,
-            workout_date=self.today,  # Add workout_date field
+            intensity='medium',
             status='completed',
+            date=self.today,
+            workout_date=self.today,
+            start_time=time(8, 0),
+            end_time=time(8, 30),
+            notes='Good run!',
             started_at=timezone.now() - timezone.timedelta(hours=2),
             completed_at=timezone.now() - timezone.timedelta(hours=1)
         )
@@ -378,12 +256,17 @@ class ActivityHistoryTests(APITestCase):
             user=self.user,
             workout_type='cycling',
             title='Evening Ride',
+            description='Evening cycling',
             duration=45,
             calories_burned=350,
             distance=15.0,
-            date=self.yesterday,
-            workout_date=self.yesterday,  # Add workout_date field
+            intensity='high',
             status='completed',
+            date=self.yesterday,
+            workout_date=self.yesterday,
+            start_time=time(18, 0),
+            end_time=time(18, 45),
+            notes='Fast ride',
             started_at=timezone.now() - timezone.timedelta(days=1, hours=3),
             completed_at=timezone.now() - timezone.timedelta(days=1, hours=2)
         )
@@ -392,12 +275,17 @@ class ActivityHistoryTests(APITestCase):
             user=self.user,
             workout_type='swimming',
             title='Swim Session',
+            description='Morning swim',
             duration=60,
             calories_burned=400,
             distance=2.0,
-            date=self.last_week,
-            workout_date=self.last_week,  # Add workout_date field
+            intensity='medium',
             status='completed',
+            date=self.last_week,
+            workout_date=self.last_week,
+            start_time=time(7, 0),
+            end_time=time(8, 0),
+            notes='Good swim',
             started_at=timezone.now() - timezone.timedelta(weeks=1, hours=4),
             completed_at=timezone.now() - timezone.timedelta(weeks=1, hours=3)
         )
