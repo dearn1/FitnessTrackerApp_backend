@@ -5,12 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
-from .models import Workout
+from .models import Workout, Goal
 from .serializers import (
     WorkoutSerializer,
     WorkoutCreateSerializer,
     WorkoutUpdateSerializer,
-    WorkoutSummarySerializer
+    WorkoutSummarySerializer,
+    GoalSerializer
 )
 
 
@@ -216,6 +217,125 @@ class WorkoutViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-from django.shortcuts import render
+class GoalViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing fitness goals.
+    Provides CRUD operations for user's fitness goals.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = GoalSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'notes']
+    ordering_fields = ['end_date', 'start_date', 'created_at', 'target_value']
+    ordering = ['-end_date', '-created_at']
 
-# Create your views here.
+    def get_queryset(self):
+        """Return goals for the authenticated user only"""
+        queryset = Goal.objects.filter(user=self.request.user)
+
+        # Filter by completion status
+        is_completed = self.request.query_params.get('is_completed')
+        if is_completed is not None:
+            is_completed = is_completed.lower() == 'true'
+            queryset = queryset.filter(is_completed=is_completed)
+
+        # Filter by goal type
+        goal_type = self.request.query_params.get('goal_type')
+        if goal_type:
+            queryset = queryset.filter(goal_type=goal_type)
+
+        # Filter by date range
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        
+        if start_date:
+            queryset = queryset.filter(end_date__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(start_date__lte=end_date)
+
+        # Filter active goals (current date is between start and end date)
+        active = self.request.query_params.get('active')
+        if active is not None:
+            today = timezone.now().date()
+            if active.lower() == 'true':
+                queryset = queryset.filter(
+                    start_date__lte=today,
+                    end_date__gte=today,
+                    is_completed=False
+                )
+            else:
+                queryset = queryset.exclude(
+                    start_date__lte=today,
+                    end_date__gte=today,
+                    is_completed=False
+                )
+
+        return queryset
+
+    def perform_create(self, serializer):
+        """Set the current user as the goal owner"""
+        serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def update_progress(self, request, pk=None):
+        """Update the current progress of a goal"""
+        goal = self.get_object()
+        current_value = request.data.get('current_value')
+        increment_by = request.data.get('increment_by')
+
+        if current_value is not None:
+            try:
+                goal.current_value = float(current_value)
+            except (TypeError, ValueError):
+                return Response(
+                    {'error': 'Invalid current_value provided'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        elif increment_by is not None:
+            try:
+                goal.current_value += float(increment_by)
+            except (TypeError, ValueError):
+                return Response(
+                    {'error': 'Invalid increment_by value provided'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            return Response(
+                {'error': 'Either current_value or increment_by must be provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Save the goal to trigger any automatic updates (like completion)
+        goal.save()
+        serializer = self.get_serializer(goal)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        """Get summary statistics for user's goals"""
+        user_goals = Goal.objects.filter(user=request.user)
+        
+        total_goals = user_goals.count()
+        completed_goals = user_goals.filter(is_completed=True).count()
+        in_progress_goals = user_goals.filter(is_completed=False).count()
+        
+        # Get goals by type
+        goals_by_type = user_goals.values('goal_type').annotate(
+            count=Count('id'),
+            completed=Count('id', filter=Q(is_completed=True)),
+            in_progress=Count('id', filter=Q(is_completed=False))
+        )
+        
+        # Calculate completion rate
+        completion_rate = (completed_goals / total_goals * 100) if total_goals > 0 else 0
+        
+        return Response({
+            'total_goals': total_goals,
+            'completed_goals': completed_goals,
+            'in_progress_goals': in_progress_goals,
+            'completion_rate': round(completion_rate, 2),
+            'goals_by_type': goals_by_type
+        })
+
+
+from django.shortcuts import render

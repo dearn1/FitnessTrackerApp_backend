@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Workout
+from .models import Workout, Goal
 from django.utils import timezone
 
 
@@ -46,6 +46,61 @@ class WorkoutSerializer(serializers.ModelSerializer):
             })
 
         return data
+
+
+class GoalSerializer(serializers.ModelSerializer):
+    """Serializer for the Goal model"""
+    user = serializers.ReadOnlyField(source='user.email')
+    progress_percentage = serializers.ReadOnlyField()
+    time_remaining = serializers.ReadOnlyField()
+    is_active = serializers.ReadOnlyField()
+    unit = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Goal
+        fields = [
+            'id', 'user', 'goal_type', 'title', 'target_value', 
+            'current_value', 'progress_percentage', 'start_date', 
+            'end_date', 'time_remaining', 'is_active', 'is_completed',
+            'completed_at', 'notes', 'created_at', 'updated_at', 'unit'
+        ]
+        read_only_fields = [
+            'id', 'user', 'is_completed', 'completed_at',
+            'created_at', 'updated_at', 'progress_percentage',
+            'time_remaining', 'is_active', 'unit'
+        ]
+
+    def validate(self, data):
+        """Custom validation for goal data"""
+        # Ensure end date is after start date
+        start_date = data.get('start_date', getattr(self.instance, 'start_date', None))
+        end_date = data.get('end_date', getattr(self.instance, 'end_date', None))
+        
+        if start_date and end_date and end_date <= start_date:
+            raise serializers.ValidationError({
+                'end_date': 'End date must be after start date.'
+            })
+
+        # Ensure target value is positive
+        target_value = data.get('target_value', getattr(self.instance, 'target_value', None))
+        if target_value is not None and target_value <= 0:
+            raise serializers.ValidationError({
+                'target_value': 'Target value must be greater than zero.'
+            })
+
+        # Ensure current value is not negative
+        current_value = data.get('current_value', getattr(self.instance, 'current_value', 0))
+        if current_value < 0:
+            raise serializers.ValidationError({
+                'current_value': 'Current value cannot be negative.'
+            })
+
+        return data
+
+    def create(self, validated_data):
+        """Set the current user as the goal owner"""
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
 
 
 class WorkoutCreateSerializer(serializers.ModelSerializer):
