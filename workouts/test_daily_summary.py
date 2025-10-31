@@ -41,9 +41,6 @@ class DailyActivitySummaryTests(APITestCase):
             intensity='medium',
             status='completed',
             workout_date=self.today,
-            date=self.today,
-            start_time=time(8, 0),
-            end_time=time(8, 30),
             notes='Test run'
         )
         
@@ -56,9 +53,6 @@ class DailyActivitySummaryTests(APITestCase):
             intensity='high',
             status='completed',
             workout_date=self.today,
-            date=self.today,
-            start_time=time(18, 0),
-            end_time=time(18, 45),
             notes='Test gym session'
         )
         
@@ -73,9 +67,6 @@ class DailyActivitySummaryTests(APITestCase):
             intensity='low',
             status='completed',
             workout_date=self.yesterday,
-            date=self.yesterday,
-            start_time=time(19, 0),
-            end_time=time(19, 20),
             notes='Test walk'
         )
     

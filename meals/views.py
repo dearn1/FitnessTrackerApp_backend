@@ -236,13 +236,12 @@ class MealViewSet(viewsets.ModelViewSet):
         return Response(daily_data)
 
 
-class FoodItemViewSet(viewsets.ReadOnlyModelViewSet):
+class FoodItemViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for browsing pre-defined food items.
-    Read-only for regular users.
+    ViewSet for managing food items.
+    Users can view all food items and create custom ones.
     """
     permission_classes = [IsAuthenticated]
-    queryset = FoodItem.objects.filter(is_active=True)
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description', 'category']
     ordering_fields = ['name', 'calories', 'category']
@@ -255,14 +254,22 @@ class FoodItemViewSet(viewsets.ReadOnlyModelViewSet):
         return FoodItemSerializer
 
     def get_queryset(self):
-        """Filter food items by category if specified"""
-        queryset = super().get_queryset()
+        """Return all active food items and user's custom items"""
+        # Show all pre-defined items (is_custom=False) and user's custom items
+        queryset = FoodItem.objects.filter(
+            Q(is_active=True, is_custom=False) | 
+            Q(created_by=self.request.user, is_custom=True)
+        )
 
         category = self.request.query_params.get('category')
         if category:
             queryset = queryset.filter(category__icontains=category)
 
         return queryset
+
+    def perform_create(self, serializer):
+        """Set the current user as creator and mark as custom"""
+        serializer.save(created_by=self.request.user, is_custom=True)
 
     @action(detail=False, methods=['get'])
     def categories(self, request):

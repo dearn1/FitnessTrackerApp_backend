@@ -102,66 +102,6 @@ class Workout(models.Model):
             return f"{minutes}m"
         return "N/A"
 
-    # Date and Time fields
-    date = models.DateField()
-    start_time = models.TimeField(null=True, blank=True, help_text="Time when workout started")
-    end_time = models.TimeField(null=True, blank=True, help_text="Time when workout ended")
-
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-date', '-start_time']
-        indexes = [
-            models.Index(fields=['user', 'date']),
-            models.Index(fields=['user', 'workout_type']),
-        ]
-
-    def __str__(self):
-        time_str = f" at {self.start_time.strftime('%H:%M')}" if self.start_time else ""
-        return f"{self.user.username} - {self.title} on {self.date}{time_str}"
-
-    @property
-    def datetime_display(self):
-        """Return formatted date and time string"""
-        if self.start_time:
-            return f"{self.date.strftime('%Y-%m-%d')} {self.start_time.strftime('%H:%M')}"
-        return self.date.strftime('%Y-%m-%d')
-
-    @property
-    def time_range_display(self):
-        """Return formatted time range if both start and end times exist"""
-        if self.start_time and self.end_time:
-            return f"{self.start_time.strftime('%H:%M')} - {self.end_time.strftime('%H:%M')}"
-        elif self.start_time:
-            return f"Started at {self.start_time.strftime('%H:%M')}"
-        return "Time not specified"
-
-    def clean(self):
-        from django.core.exceptions import ValidationError
-
-        # Validate end_time is after start_time
-        if self.start_time and self.end_time:
-            if self.end_time <= self.start_time:
-                raise ValidationError({
-                    'end_time': 'End time must be after start time'
-                })
-
-            # Calculate duration from time range if provided
-            from datetime import datetime, timedelta
-            start_dt = datetime.combine(self.date, self.start_time)
-            end_dt = datetime.combine(self.date, self.end_time)
-            calculated_duration = int((end_dt - start_dt).total_seconds() / 60)
-
-            # Allow some tolerance (±5 minutes)
-            if abs(calculated_duration - self.duration) > 5:
-                self.duration = calculated_duration
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
-
 class Goal(models.Model):
     """Model for tracking fitness goals"""
     GOAL_TYPES = [
@@ -293,9 +233,3 @@ class Goal(models.Model):
             raise ValidationError({
                 'current_value': 'Current value cannot be negative'
             })
-
-
-# This model was already at the end of the file
-from django.db import models
-
-# Create your models here.

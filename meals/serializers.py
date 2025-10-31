@@ -98,7 +98,8 @@ class NutritionSummarySerializer(serializers.Serializer):
 
 
 class FoodItemSerializer(serializers.ModelSerializer):
-    """Serializer for pre-defined food items"""
+    """Serializer for food items"""
+    created_by_email = serializers.EmailField(source='created_by.email', read_only=True)
 
     class Meta:
         model = FoodItem
@@ -106,10 +107,11 @@ class FoodItemSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'category',
             'calories', 'protein', 'carbohydrates', 'fats',
             'fiber', 'sugar', 'sodium',
-            'serving_size', 'is_active',
+            'serving_size', 'serving_unit', 'is_active',
+            'is_custom', 'created_by', 'created_by_email',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'is_custom', 'created_by', 'created_at', 'updated_at']
 
 
 class FoodItemListSerializer(serializers.ModelSerializer):
