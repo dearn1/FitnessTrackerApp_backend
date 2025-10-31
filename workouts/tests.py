@@ -243,10 +243,7 @@ class ActivityHistoryTests(APITestCase):
             distance=5.0,
             intensity='medium',
             status='completed',
-            date=self.today,
             workout_date=self.today,
-            start_time=time(8, 0),
-            end_time=time(8, 30),
             notes='Good run!',
             started_at=timezone.now() - timezone.timedelta(hours=2),
             completed_at=timezone.now() - timezone.timedelta(hours=1)
@@ -262,10 +259,7 @@ class ActivityHistoryTests(APITestCase):
             distance=15.0,
             intensity='high',
             status='completed',
-            date=self.yesterday,
             workout_date=self.yesterday,
-            start_time=time(18, 0),
-            end_time=time(18, 45),
             notes='Fast ride',
             started_at=timezone.now() - timezone.timedelta(days=1, hours=3),
             completed_at=timezone.now() - timezone.timedelta(days=1, hours=2)
@@ -281,10 +275,7 @@ class ActivityHistoryTests(APITestCase):
             distance=2.0,
             intensity='medium',
             status='completed',
-            date=self.last_week,
             workout_date=self.last_week,
-            start_time=time(7, 0),
-            end_time=time(8, 0),
             notes='Good swim',
             started_at=timezone.now() - timezone.timedelta(weeks=1, hours=4),
             completed_at=timezone.now() - timezone.timedelta(weeks=1, hours=3)
@@ -303,8 +294,7 @@ class ActivityHistoryTests(APITestCase):
             duration=20,
             calories_burned=150,
             distance=3.0,
-            date=self.today,
-            workout_date=self.today,  # Add workout_date field
+            workout_date=self.today,
             status='completed',
             started_at=timezone.now() - timezone.timedelta(hours=5),
             completed_at=timezone.now() - timezone.timedelta(hours=4, minutes=40)
@@ -421,8 +411,7 @@ class WorkoutDeletionTests(APITestCase):
             duration=30,
             calories_burned=250,
             status='completed',
-            workout_date=timezone.now().date(),
-            date=timezone.now().date()
+            workout_date=timezone.now().date()
         )
         self.other_user_workout = Workout.objects.create(
             user=self.other_user,
@@ -431,8 +420,7 @@ class WorkoutDeletionTests(APITestCase):
             duration=45,
             calories_burned=350,
             status='completed',
-            workout_date=timezone.now().date(),
-            date=timezone.now().date()
+            workout_date=timezone.now().date()
         )
     
     def test_delete_own_workout(self):
