@@ -1,0 +1,163 @@
+{
+	"info": {
+		"name": "Fitness Tracker API",
+		"description": "Complete API collection for Fitness Tracker App",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [{"key": "token", "value": "{{access_token}}", "type": "string"}]
+	},
+	"variable": [
+		{"key": "base_url", "value": "http://localhost:8000"},
+		{"key": "access_token", "value": ""},
+		{"key": "refresh_token", "value": ""}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"auth": {"type": "noauth"},
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"username\": \"testuser\",\n  \"password\": \"SecurePass123!\",\n  \"password2\": \"SecurePass123!\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\"\n}"},
+						"url": {"raw": "{{base_url}}/api/auth/register/", "host": ["{{base_url}}"], "path": ["api", "auth", "register", ""]}
+					}
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"auth": {"type": "noauth"},
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePass123!\"\n}"},
+						"url": {"raw": "{{base_url}}/api/auth/login/", "host": ["{{base_url}}"], "path": ["api", "auth", "login", ""]}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"auth": {"type": "noauth"},
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"},
+						"url": {"raw": "{{base_url}}/api/auth/token/refresh/", "host": ["{{base_url}}"], "path": ["api", "auth", "token", "refresh", ""]}
+					}
+				},
+				{
+					"name": "Logout User",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"},
+						"url": {"raw": "{{base_url}}/api/auth/logout/", "host": ["{{base_url}}"], "path": ["api", "auth", "logout", ""]}
+					}
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"url": {"raw": "{{base_url}}/api/auth/profile/", "host": ["{{base_url}}"], "path": ["api", "auth", "profile", ""]}
+					}
+				},
+				{
+					"name": "Update User Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {"mode": "raw", "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\"\n}"},
+						"url": {"raw": "{{base_url}}/api/auth/profile/", "host": ["{{base_url}}"], "path": ["api", "auth", "profile", ""]}
+					}
+				}
+			]
+		},
+		{
+			"name": "Workouts",
+			"item": [
+				{"name": "List All Workouts", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/workouts/workouts/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", ""]}}},
+				{"name": "Create Workout", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"workout_type\": \"running\",\n  \"title\": \"Morning Run\",\n  \"description\": \"5K morning jog\",\n  \"duration\": 30,\n  \"calories_burned\": 250.50,\n  \"distance\": 5.0,\n  \"intensity\": \"medium\",\n  \"status\": \"planned\",\n  \"workout_date\": \"2025-10-31\"\n}"}, "url": {"raw": "{{base_url}}/api/workouts/workouts/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", ""]}}},
+				{"name": "Get Single Workout", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/workouts/workouts/1/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", "1", ""]}}},
+				{"name": "Update Workout", "request": {"method": "PATCH", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"duration\": 40,\n  \"calories_burned\": 300.00\n}"}, "url": {"raw": "{{base_url}}/api/workouts/workouts/1/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", "1", ""]}}},
+				{"name": "Delete Workout", "request": {"method": "DELETE", "url": {"raw": "{{base_url}}/api/workouts/workouts/1/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", "1", ""]}}},
+				{"name": "Today's Workouts", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/workouts/workouts/today/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", "today", ""]}}},
+				{"name": "This Week's Workouts", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/workouts/workouts/this_week/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", "this_week", ""]}}},
+				{"name": "Workout Summary", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/workouts/workouts/summary/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", "summary", ""]}}},
+				{"name": "Start Workout", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{}"}, "url": {"raw": "{{base_url}}/api/workouts/workouts/1/start/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", "1", "start", ""]}}},
+				{"name": "Complete Workout", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"duration\": 45,\n  \"calories_burned\": 320.00\n}"}, "url": {"raw": "{{base_url}}/api/workouts/workouts/1/complete/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", "1", "complete", ""]}}},
+				{"name": "Skip Workout", "request": {"method": "POST", "body": {"mode": "raw", "raw": "{}"}, "url": {"raw": "{{base_url}}/api/workouts/workouts/1/skip/", "host": ["{{base_url}}"], "path": ["api", "workouts", "workouts", "1", "skip", ""]}}}
+			]
+		},
+		{
+			"name": "Goals",
+			"item": [
+				{"name": "List All Goals", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/workouts/goals/", "host": ["{{base_url}}"], "path": ["api", "workouts", "goals", ""]}}},
+				{"name": "Create Goal", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"goal_type\": \"running\",\n  \"title\": \"Run 100km\",\n  \"target_value\": 100.00,\n  \"current_value\": 0,\n  \"start_date\": \"2025-10-01\",\n  \"end_date\": \"2025-10-31\"\n}"}, "url": {"raw": "{{base_url}}/api/workouts/goals/", "host": ["{{base_url}}"], "path": ["api", "workouts", "goals", ""]}}},
+				{"name": "Get Single Goal", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/workouts/goals/1/", "host": ["{{base_url}}"], "path": ["api", "workouts", "goals", "1", ""]}}},
+				{"name": "Update Goal", "request": {"method": "PATCH", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"target_value\": 120.00\n}"}, "url": {"raw": "{{base_url}}/api/workouts/goals/1/", "host": ["{{base_url}}"], "path": ["api", "workouts", "goals", "1", ""]}}},
+				{"name": "Delete Goal", "request": {"method": "DELETE", "url": {"raw": "{{base_url}}/api/workouts/goals/1/", "host": ["{{base_url}}"], "path": ["api", "workouts", "goals", "1", ""]}}},
+				{"name": "Update Goal Progress", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"increment_by\": 5.0\n}"}, "url": {"raw": "{{base_url}}/api/workouts/goals/1/update_progress/", "host": ["{{base_url}}"], "path": ["api", "workouts", "goals", "1", "update_progress", ""]}}},
+				{"name": "Goals Summary", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/workouts/goals/summary/", "host": ["{{base_url}}"], "path": ["api", "workouts", "goals", "summary", ""]}}}
+			]
+		},
+		{
+			"name": "Meals",
+			"item": [
+				{"name": "List All Meals", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/meals/meals/", "host": ["{{base_url}}"], "path": ["api", "meals", "meals", ""]}}},
+				{"name": "Create Meal", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"meal_type\": \"breakfast\",\n  \"name\": \"Healthy Breakfast\",\n  \"meal_date\": \"2025-10-31\",\n  \"meal_time\": \"08:00:00\",\n  \"calories\": 350,\n  \"protein\": 12.5,\n  \"carbs\": 55.0,\n  \"fats\": 8.0\n}"}, "url": {"raw": "{{base_url}}/api/meals/meals/", "host": ["{{base_url}}"], "path": ["api", "meals", "meals", ""]}}},
+				{"name": "Get Single Meal", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/meals/meals/1/", "host": ["{{base_url}}"], "path": ["api", "meals", "meals", "1", ""]}}},
+				{"name": "Update Meal", "request": {"method": "PATCH", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"calories\": 400\n}"}, "url": {"raw": "{{base_url}}/api/meals/meals/1/", "host": ["{{base_url}}"], "path": ["api", "meals", "meals", "1", ""]}}},
+				{"name": "Delete Meal", "request": {"method": "DELETE", "url": {"raw": "{{base_url}}/api/meals/meals/1/", "host": ["{{base_url}}"], "path": ["api", "meals", "meals", "1", ""]}}},
+				{"name": "Today's Meals", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/meals/meals/today/", "host": ["{{base_url}}"], "path": ["api", "meals", "meals", "today", ""]}}},
+				{"name": "Meals Summary", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/meals/meals/summary/", "host": ["{{base_url}}"], "path": ["api", "meals", "meals", "summary", ""]}}}
+			]
+		},
+		{
+			"name": "Food Items",
+			"item": [
+				{"name": "List Food Items", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/meals/food-items/", "host": ["{{base_url}}"], "path": ["api", "meals", "food-items", ""]}}},
+				{"name": "Create Food Item", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"name\": \"Banana\",\n  \"category\": \"fruits\",\n  \"serving_size\": \"1 medium\",\n  \"serving_unit\": \"piece\",\n  \"calories\": 105,\n  \"protein\": 1.3,\n  \"carbohydrates\": 27.0,\n  \"fats\": 0.4,\n  \"fiber\": 3.1\n}"}, "url": {"raw": "{{base_url}}/api/meals/food-items/", "host": ["{{base_url}}"], "path": ["api", "meals", "food-items", ""]}}},
+				{"name": "Get Food Item", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/meals/food-items/1/", "host": ["{{base_url}}"], "path": ["api", "meals", "food-items", "1", ""]}}},
+				{"name": "Update Food Item", "request": {"method": "PATCH", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"calories\": 110\n}"}, "url": {"raw": "{{base_url}}/api/meals/food-items/1/", "host": ["{{base_url}}"], "path": ["api", "meals", "food-items", "1", ""]}}},
+				{"name": "Delete Food Item", "request": {"method": "DELETE", "url": {"raw": "{{base_url}}/api/meals/food-items/1/", "host": ["{{base_url}}"], "path": ["api", "meals", "food-items", "1", ""]}}},
+				{"name": "Food Categories", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/meals/food-items/categories/", "host": ["{{base_url}}"], "path": ["api", "meals", "food-items", "categories", ""]}}}
+			]
+		},
+		{
+			"name": "Steps",
+			"item": [
+				{"name": "List Daily Steps", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/daily/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", ""]}}},
+				{"name": "Create Daily Steps", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"date\": \"2025-10-31\",\n  \"steps\": 10000,\n  \"distance_km\": 7.5,\n  \"calories_burned\": 350,\n  \"active_minutes\": 60,\n  \"source\": \"manual\"\n}"}, "url": {"raw": "{{base_url}}/api/steps/daily/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", ""]}}},
+				{"name": "Get Daily Steps", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/daily/1/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", "1", ""]}}},
+				{"name": "Update Daily Steps", "request": {"method": "PATCH", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"steps\": 12000\n}"}, "url": {"raw": "{{base_url}}/api/steps/daily/1/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", "1", ""]}}},
+				{"name": "Delete Daily Steps", "request": {"method": "DELETE", "url": {"raw": "{{base_url}}/api/steps/daily/1/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", "1", ""]}}},
+				{"name": "Today's Steps", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/daily/today/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", "today", ""]}}},
+				{"name": "Quick Log Steps", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"steps\": 8000\n}"}, "url": {"raw": "{{base_url}}/api/steps/daily/quick_log/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", "quick_log", ""]}}},
+				{"name": "Weekly Steps", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/daily/weekly/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", "weekly", ""]}}},
+				{"name": "Monthly Steps", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/daily/monthly/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", "monthly", ""]}}},
+				{"name": "Steps Summary", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/daily/summary/", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", "summary", ""]}}},
+				{"name": "Steps Chart Data", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/daily/chart_data/?period=7", "host": ["{{base_url}}"], "path": ["api", "steps", "daily", "chart_data", ""], "query": [{"key": "period", "value": "7"}]}}}
+			]
+		},
+		{
+			"name": "Step Goals",
+			"item": [
+				{"name": "List Step Goals", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/goals/", "host": ["{{base_url}}"], "path": ["api", "steps", "goals", ""]}}},
+				{"name": "Create Step Goal", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"daily_goal\": 10000\n}"}, "url": {"raw": "{{base_url}}/api/steps/goals/", "host": ["{{base_url}}"], "path": ["api", "steps", "goals", ""]}}},
+				{"name": "Get Step Goal", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/goals/1/", "host": ["{{base_url}}"], "path": ["api", "steps", "goals", "1", ""]}}},
+				{"name": "Update Step Goal", "request": {"method": "PATCH", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"daily_goal\": 12000\n}"}, "url": {"raw": "{{base_url}}/api/steps/goals/1/", "host": ["{{base_url}}"], "path": ["api", "steps", "goals", "1", ""]}}},
+				{"name": "Current Step Goal", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/goals/current/", "host": ["{{base_url}}"], "path": ["api", "steps", "goals", "current", ""]}}}
+			]
+		},
+		{
+			"name": "Step Streaks",
+			"item": [
+				{"name": "List Step Streaks", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/streaks/", "host": ["{{base_url}}"], "path": ["api", "steps", "streaks", ""]}}},
+				{"name": "Current Streak", "request": {"method": "GET", "url": {"raw": "{{base_url}}/api/steps/streaks/current/", "host": ["{{base_url}}"], "path": ["api", "steps", "streaks", "current", ""]}}},
+				{"name": "Refresh Streak", "request": {"method": "POST", "body": {"mode": "raw", "raw": "{}"}, "url": {"raw": "{{base_url}}/api/steps/streaks/refresh/", "host": ["{{base_url}}"], "path": ["api", "steps", "streaks", "refresh", ""]}}}
+			]
+		}
+	]
+}
