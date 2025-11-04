@@ -18,18 +18,16 @@ jobs:
         run: pip install -r requirements.txt
       - name: Test the code
         env:
-          DB_HOST: 'ep-sweet-poetry-adtsz9tl-pooler.c-2.us-east-1.aws.neon.tech'
-          DB_USER: 'neondb_owner'
-          DB_PASSWORD: 'npg_lsXZRT5hPpG8'
-          DB_NAME: 'neondb'
-          DB_PORT: '5432'
-          SECRET_KEY: 'django-insecure-^l482n+=kenr%!cpvqsfzyv_0igm(w*&$oq%i+%@oxwy2jh_j('
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: python manage.py test
 
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
